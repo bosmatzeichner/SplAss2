@@ -1,5 +1,7 @@
 package bgu.spl.a2;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * Describes a monitor that supports the concept of versioning - its idea is
  * simple, the monitor has a version number which you can receive via the method
@@ -16,20 +18,29 @@ package bgu.spl.a2;
  * private, protected or package protected - in other words, no new public
  * methods
  */
+
 public class VersionMonitor {
+	private AtomicInteger versionNumber = new AtomicInteger();
 
-    public int getVersion() {
-        //TODO: replace method body with real implementation
-        throw new UnsupportedOperationException("Not Implemented Yet.");
-    }
+	public int getVersion() {
+		return versionNumber.get();
+	}
 
-    public void inc() {
-        //TODO: replace method body with real implementation
-        throw new UnsupportedOperationException("Not Implemented Yet.");
-    }
+	public synchronized void inc() {
+		versionNumber.incrementAndGet();
+		System.out.println("WE JUST INCREASED");
+		notifyAll();
+	}
 
-    public void await(int version) throws InterruptedException {
-        //TODO: replace method body with real implementation
-        throw new UnsupportedOperationException("Not Implemented Yet.");
-    }
+	public void await(int version) throws InterruptedException {
+		synchronized(this){
+			System.out.println("AWAIT");
+			while(versionNumber.get() == version){
+				System.out.println("IN WHILE BEFORE WAIT");
+				this.wait();
+				System.out.println("IN WHILE AFTER WAIT");
+			}
+		}
+		//throw new InterruptedException();
+	}
 }
