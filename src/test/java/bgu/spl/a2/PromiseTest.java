@@ -2,6 +2,10 @@ package bgu.spl.a2;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,11 +56,19 @@ public class PromiseTest {
 
 	@Test
 	public void testResolve() {
+		final boolean[] testArray = new boolean[1];
+		callback callMe = new callback(){
+			public void call() {
+				testArray[0] = true;
+			}
+		};
 		try {
+			promise.subscribe(callMe);
 			promise.resolve(666);
+			Assert.assertEquals("The call() function didn't do it's job", testArray[0], true);
 			try {
 				promise.resolve(999);
-				Assert.fail("The resolved value can't be changed once defined");
+				Assert.fail("The resolved value can't be changed once defined");		
 			}
 			catch (IllegalStateException exp){
 				int x = promise.get();
@@ -69,26 +81,24 @@ public class PromiseTest {
 		catch (Exception e) {
 			Assert.fail("Failed to resolve a value");
 		}
+		
+		assertNull("The callback function should've been changed to null", callMe);
 
 	} 
 
 	@Test
 	public void testSubscribe() {
-		/*
-		 * What to do in case the object isn't resolved and we get callbacks? Do we store them somewhere?
-		 * If so - Do we need to check the method indeed added the callback to the data structure?
-		 */
 		try {
 			promise.resolve(123);
 			callback callMe = new callback(){
-
+				
 				public void call() {}
 				
 			};
 			promise.subscribe(callMe);
-			Assert.assertEquals(null, callMe);
+			Assert.assertEquals("The callback function should've been changed to null", null, callMe);
 		} catch (Exception e) {
-			// TODO: handle exception
+			fail("Issue with the resolve() method: " + e.getMessage());
 		}
 	}
 	
