@@ -1,5 +1,7 @@
 package bgu.spl.a2;
 
+import java.util.LinkedList;
+
 /**
  * this class represents a deferred result i.e., an object that eventually will
  * be resolved to hold a result of some operation, the class allows for getting
@@ -15,19 +17,22 @@ package bgu.spl.a2;
  * @param <T>
  *            the result type, <boolean> resolved - initialized ;
  */
-public class Promise<T>{
+public class Promise<T> {
+
+	private T resolved = null;
+	private boolean isResolve = false;
+	private LinkedList<callback> callbackList = new LinkedList<callback>();
 
 	/**
 	 *
 	 * @return the resolved value if such exists (i.e., if this object has been
-	 *         {@link #resolve(java.lang.Object)}ed 
+	 *         {@link #resolve(java.lang.Object)}ed
 	 * @throws IllegalStateException
 	 *             in the case where this method is called and this object is
 	 *             not yet resolved
 	 */
 	public T get() {
-		//TODO: replace method body with real implementation
-		throw new UnsupportedOperationException("Not Implemented Yet.");
+		return resolved;
 	}
 
 	/**
@@ -37,27 +42,33 @@ public class Promise<T>{
 	 *         before.
 	 */
 	public boolean isResolved() {
-		//TODO: replace method body with real implementation
-		throw new UnsupportedOperationException("Not Implemented Yet.");
+		return isResolve;
 	}
-
 
 	/**
 	 * resolve this promise object - from now on, any call to the method
 	 * {@link #get()} should return the given value
 	 *
 	 * Any callbacks that were registered to be notified when this object is
-	 * resolved via the {@link #subscribe(callback)} method should
-	 * be executed before this method returns
+	 * resolved via the {@link #subscribe(callback)} method should be executed
+	 * before this method returns
 	 *
-     * @throws IllegalStateException
-     * 			in the case where this object is already resolved
+	 * @throws IllegalStateException
+	 *             in the case where this object is already resolved
 	 * @param value
 	 *            - the value to resolve this promise object with
 	 */
-	public void resolve(T value){
-		//TODO: replace method body with real implementation
-		throw new UnsupportedOperationException("Not Implemented Yet.");
+
+	public void resolve(T value) {
+		if (isResolve)
+			throw new IllegalStateException("promise has already been resolved");
+		resolved = value;
+		isResolve = true;
+		for (callback callback : callbackList) {
+			callback.call();
+			callback = null;
+		}
+		callbackList.clear();
 	}
 
 	/**
@@ -74,7 +85,11 @@ public class Promise<T>{
 	 *            the callback to be called when the promise object is resolved
 	 */
 	public void subscribe(callback callback) {
-		//TODO: replace method body with real implementation
-		throw new UnsupportedOperationException("Not Implemented Yet.");
+		if (!isResolved()) {
+			this.callbackList.add(callback);
+		} else {
+			callback.call();
+			callback = null;
+		}
 	}
 }
