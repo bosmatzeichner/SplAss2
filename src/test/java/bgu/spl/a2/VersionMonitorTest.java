@@ -39,9 +39,9 @@ public class VersionMonitorTest {
 		Thread testThread1 = new Thread(() -> {
 			try {
 				verMonitor.await(0);
-				testArray[0] = true;
+				fail("await function should have throw exception");
 			} catch (InterruptedException e) {
-				fail("await function threw an undemend exception");
+				testArray[0] = true;
 			}
 		});
 		Thread testThread2 = new Thread(() -> {
