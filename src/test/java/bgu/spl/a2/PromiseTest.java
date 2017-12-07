@@ -13,7 +13,7 @@ public class PromiseTest {
 
 	@Before
 	public void setUp() throws Exception {
-		promise = new Promise<Integer>();
+		this.promise = new Promise<Integer>();
 	}
 
 	@After
@@ -24,72 +24,58 @@ public class PromiseTest {
 
 	@Test
 	public void testGet() {
-		try {
-			promise.get();
-		} catch (IllegalStateException exp) {
-			promise.resolve(6);
-			try {
-				int temp = promise.get();
-				assertEquals(temp, 6);
-			} catch (Exception e) {
-				Assert.fail("The resolved value should've been equal to 6");
-			}
-		} catch (Exception exp) {
-			Assert.fail("The method should've thrown an IllegalStateException");
-		}
+		assertNull("promise hasn't resolved yet", promise.get());
+		// testResolve();
+		promise.resolve(1);
+		int resolveVal = promise.get();
+		assertEquals(1, resolveVal);
 	}
 
 	@Test
 	public void testIsResolved() {
-		Assert.assertEquals("The initial value should be FALSE", false, promise.isResolved());
-		try {
-			promise.resolve(123);
-			Assert.assertEquals("The expected value is TRUE", true, promise.isResolved());
-		} catch (Exception e) {
-			Assert.fail("Some issue with resolve(): " + e.getMessage());
-		}
+		assertEquals(false, promise.isResolved());
+		// testResolve();
+		promise.resolve(1);
+		assertEquals(true, promise.isResolved());
 	}
 
 	@Test
 	public void testResolve() {
-		try {
-			promise.resolve(666);
-			try {
-				promise.resolve(999);
-				Assert.fail("The resolved value can't be changed once defined");
-			}
-			catch (IllegalStateException exp){
-				int x = promise.get();
-				assertEquals(x, 666);
-			}
-			catch (Exception e) {
-				Assert.fail("The wrong exception was thrown. EXPECTED: IllegalStateException");
-			}
-		}
-		catch (Exception e) {
-			Assert.fail("Failed to resolve a value");
-		}
 
-	} 
+		final boolean[] callAssure = new boolean[1];
+		callback call = () -> {
+			callAssure[0] = true;
+		};
+		// testSubscribe();
+		promise.subscribe(call);
+		assertEquals("the call function unreasonably executed", false, callAssure[0]);
+		try {
+			promise.resolve(5);
+			try {
+				promise.resolve(6);
+				Assert.fail();
+			} catch (IllegalStateException exp) {
+				int x = promise.get();
+				assertEquals(x, 5);
+			} catch (Exception exp) {
+				Assert.fail();
+			}
+		} catch (Exception exp) {
+			Assert.fail();
+		}
+		assertEquals("the call function has not executed by resolved", true, callAssure[0]);
+	}
 
 	@Test
 	public void testSubscribe() {
-		/*
-		 * What to do in case the object isn't resolved and we get callbacks? Do we store them somewhere?
-		 * If so - Do we need to check the method indeed added the callback to the data structure?
-		 */
-		try {
-			promise.resolve(123);
-			callback callMe = new callback(){
-
-				public void call() {}
-				
-			};
-			promise.subscribe(callMe);
-			Assert.assertEquals(null, callMe);
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
+		// testResolve();
+		promise.resolve(1);
+		boolean[] callAssure = new boolean[1];
+		callback call = () -> {
+			callAssure[0] = true;
+		};
+		promise.subscribe(call);
+		assertEquals("the call function has not executed by subscribe", true, callAssure[0]);
 	}
-	
+
 }
