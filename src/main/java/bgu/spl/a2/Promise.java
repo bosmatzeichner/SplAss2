@@ -20,7 +20,7 @@ import java.util.LinkedList;
 public class Promise<T> {
 
 	private T resolved = null;
-	private boolean isResolve = false;
+	private boolean isResolved = false;
 	private LinkedList<callback> callbackList = new LinkedList<callback>();
 
 	/**
@@ -42,7 +42,7 @@ public class Promise<T> {
 	 *         before.
 	 */
 	public boolean isResolved() {
-		return isResolve;
+		return isResolved;
 	}
 
 	/**
@@ -60,10 +60,10 @@ public class Promise<T> {
 	 */
 
 	public void resolve(T value) {
-		if (isResolve)
-			throw new IllegalStateException("promise has already been resolved");
+		if (isResolved)
+			throw new IllegalStateException("Promise has already been resolved");
 		resolved = value;
-		isResolve = true;
+		isResolved = true;
 		for (callback callback : callbackList) {
 			callback.call();
 			callback = null;

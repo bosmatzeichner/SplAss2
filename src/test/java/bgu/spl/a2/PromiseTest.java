@@ -6,7 +6,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import junit.framework.Assert;
 
 public class PromiseTest {
 	Promise<Integer> promise;
@@ -24,19 +23,30 @@ public class PromiseTest {
 
 	@Test
 	public void testGet() {
-		assertNull("promise hasn't resolved yet", promise.get());
-		// testResolve();
-		promise.resolve(1);
-		int resolveVal = promise.get();
-		assertEquals(1, resolveVal);
+		try {
+			promise.get();
+		} catch (IllegalStateException exp) {
+			promise.resolve(6);
+			try {
+				int temp = promise.get();
+				assertEquals(temp, 6);
+			} catch (Exception e) {
+				fail("The resolved value should've been equal to 6");
+			}
+		} catch (Exception exp) {
+			fail("The method should've thrown an IllegalStateException");
+		}
 	}
 
 	@Test
 	public void testIsResolved() {
-		assertEquals(false, promise.isResolved());
-		// testResolve();
-		promise.resolve(1);
-		assertEquals(true, promise.isResolved());
+		assertEquals("The initial value should be FALSE", false, promise.isResolved());
+		try {
+			promise.resolve(123);
+			assertEquals("The expected value is TRUE", true, promise.isResolved());
+		} catch (Exception e) {
+			fail("Some issue with resolve(): " + e.getMessage());
+		}
 	}
 
 	@Test
@@ -53,29 +63,32 @@ public class PromiseTest {
 			promise.resolve(5);
 			try {
 				promise.resolve(6);
-				Assert.fail();
+				fail();
 			} catch (IllegalStateException exp) {
 				int x = promise.get();
 				assertEquals(x, 5);
 			} catch (Exception exp) {
-				Assert.fail();
+				fail();
 			}
 		} catch (Exception exp) {
-			Assert.fail();
+			fail();
 		}
 		assertEquals("the call function has not executed by resolved", true, callAssure[0]);
 	}
 
 	@Test
 	public void testSubscribe() {
-		// testResolve();
-		promise.resolve(1);
-		boolean[] callAssure = new boolean[1];
-		callback call = () -> {
-			callAssure[0] = true;
-		};
-		promise.subscribe(call);
-		assertEquals("the call function has not executed by subscribe", true, callAssure[0]);
+		try {
+			promise.resolve(1);
+			boolean[] callAssure = new boolean[1];
+			callback call = () -> {
+				callAssure[0] = true;
+			};
+			promise.subscribe(call);
+			assertEquals("the call function has not executed by subscribe", true, callAssure[0]);
+		} catch (Exception e) {
+			fail("Some issue with resolve(): " + e.getMessage());
+		}
 	}
 
 }

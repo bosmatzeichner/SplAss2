@@ -18,23 +18,27 @@ import java.util.concurrent.atomic.AtomicInteger;
  * private, protected or package protected - in other words, no new public
  * methods
  */
+
 public class VersionMonitor {
-	AtomicInteger versionNum = new AtomicInteger(0);
+	private AtomicInteger versionNumber = new AtomicInteger();
 
 	public int getVersion() {
-		return versionNum.get();
+		return versionNumber.get();
 	}
 
 	public synchronized void inc() {
-		versionNum.incrementAndGet();
+		versionNumber.incrementAndGet();
 		notifyAll();
 	}
 
-	public synchronized void await(int version) throws InterruptedException {
-		while (version == versionNum.get()) {
+	public void await(int version) throws InterruptedException {
+		synchronized(this){
+			while(versionNumber.get() == version){
 				this.wait();
-				throw new InterruptedException();
-			
+				//throw new InterruptedException();
+							
+			}
 		}
+	
 	}
 }

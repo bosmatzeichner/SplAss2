@@ -35,27 +35,19 @@ public class VersionMonitorTest {
 
 	@Test
 	public void testAwait() {
-		final boolean[] testArray = new boolean[2];
-		Thread testThread1 = new Thread(() -> {
+		Thread testThread1 = new Thread(()-> {
 			try {
 				verMonitor.await(0);
-				fail("await function should have throw exception");
-			} catch (InterruptedException e) {
-				testArray[0] = true;
-			}
+			} catch (InterruptedException e) {}
 		});
 		Thread testThread2 = new Thread(() -> {
 			try {
 				verMonitor.await(3);
-				testArray[1] = true;
 			} catch (InterruptedException e) {
 				fail("await function threw an undemend exception");
 			}
-		});
-		
-				
+		});	
 		///////////////test await (current version number)/////////////////
-		
 		testThread1.start();
 		try {
 			Thread.sleep(100);
@@ -65,7 +57,6 @@ public class VersionMonitorTest {
 				Thread.sleep(100);
 				assertEquals("testThread1 shouldn't be waiting anymore", testThread1.getState(),
 						Thread.State.TERMINATED);
-				assertEquals("testThread1 function has not been completed", true, testArray[0]);
 				assertEquals("testThread1 should be waiting", testThread1.getState(), Thread.State.TERMINATED);
 			} catch (InterruptedException e) {
 				fail("an undemend exception has been thrown while put the main thread asleep");
@@ -73,21 +64,11 @@ public class VersionMonitorTest {
 		} catch (InterruptedException e) {
 			fail("an undemend exception has been thrown while put the main thread asleep");
 		}
-		
-		
-		////////test await (an unequal number tocurrent version number)////////
-		
+		////////test await (an unequal number to current version number)////////
 		testThread2.start();
 		try {
 			Thread.sleep(100);
-		} catch (InterruptedException e) {
-		}
+		} catch (InterruptedException e) {}
 		assertEquals("testThread2 should not be waiting at all", testThread2.getState(), Thread.State.TERMINATED);
-		assertEquals("testThread2 function has not been completed", true, testArray[1]);
-
-		////////////////////////////////////////////////
-		System.out.println(
-				"thred 2 state is: " + testThread2.getState() + "  ,  thread1 state is:  " + testThread1.getState());
-
 	}
 }
