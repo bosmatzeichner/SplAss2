@@ -1,5 +1,9 @@
 package bgu.spl.a2;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 /**
  * represents an actor thread pool - to understand what this class does please
  * refer to your assignment.
@@ -11,6 +15,14 @@ package bgu.spl.a2;
  * methods
  */
 public class ActorThreadPool {
+	int numOfThreads;
+	boolean isShutDown = false;
+
+	LinkedHashMap<String, ConcurrentLinkedQueue<Action>> qsOfActors;
+	LinkedHashMap<String, PrivateState> privateStatesOfActors;
+	Thread[] threads;
+	VersionMonitor vMonitor;
+
 
 	/**
 	 * creates a {@link ActorThreadPool} which has nthreads. Note, threads
@@ -25,8 +37,32 @@ public class ActorThreadPool {
 	 *            pool
 	 */
 	public ActorThreadPool(int nthreads) {
-		// TODO: replace method body with real implementation
-		throw new UnsupportedOperationException("Not Implemented Yet.");
+		numOfThreads = nthreads;
+
+		qsOfActors = new LinkedHashMap<>();
+		privateStatesOfActors = new LinkedHashMap<>();
+
+		threads = new Thread[numOfThreads];
+
+		for (Thread i : threads){
+			i = new Thread(() -> {
+				while(!isShutDown){
+					for(Map.Entry<String, ConcurrentLinkedQueue<Action>> j : qsOfActors.entrySet()){
+						ConcurrentLinkedQueue<Action> queueOfAnActor = (ConcurrentLinkedQueue<Action>) j.getValue();
+						if(!queueOfAnActor.isEmpty()){
+							Action action = queueOfAnActor.poll();
+							vMonitor.inc();
+							PrivateState tempPriState = privateStatesOfActors.get(j.getKey());
+							action.handle(this, j.getKey(), tempPriState);
+							tempPriState.addRecord(action.getActionName());
+						}
+					}
+					try {
+						vMonitor.await(vMonitor.getVersion());
+					} catch (InterruptedException e) {}
+				}
+			});
+		}
 	}
 
 	/**
@@ -41,8 +77,14 @@ public class ActorThreadPool {
 	 *            actor's private state (actor's information)
 	 */
 	public void submit(Action<?> action, String actorId, PrivateState actorState) {
-		// TODO: replace method body with real implementation
-		throw new UnsupportedOperationException("Not Implemented Yet.");
+		if (!isShutDown){
+			if(!qsOfActors.containsKey(actorId)){
+				qsOfActors.put(actorId, new ConcurrentLinkedQueue<>());
+				privateStatesOfActors.put(actorId, actorState);
+			}
+			qsOfActors.get(actorId).add(action);
+			vMonitor.inc();
+		}
 	}
 
 	/**
@@ -56,16 +98,19 @@ public class ActorThreadPool {
 	 *             if the thread that shut down the threads is interrupted
 	 */
 	public void shutdown() throws InterruptedException {
-		// TODO: replace method body with real implementation
-		throw new UnsupportedOperationException("Not Implemented Yet.");
+		isShutDown = true;
+		for(Thread i : threads){
+			i.interrupt();
+		}
 	}
 
 	/**
 	 * start the threads belongs to this thread pool
 	 */
 	public void start() {
-		// TODO: replace method body with real implementation
-		throw new UnsupportedOperationException("Not Implemented Yet.");
+		for(Thread i : threads){
+			i.start();
+		}
 	}
 
 }
