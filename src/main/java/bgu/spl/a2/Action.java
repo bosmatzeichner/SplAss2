@@ -1,6 +1,8 @@
 package bgu.spl.a2;
 
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * an abstract class that represents an action that may be executed using the
@@ -14,14 +16,20 @@ import java.util.Collection;
  * @param <R> the action result type
  */
 public abstract class Action<R> {
-
+	private ActorThreadPool actorThreadPool;
+	private Promise<R> myPromise = new Promise<R>();
+	private callback myCallback;
+	private AtomicReference<String> actionName;
+	private AtomicReference<Promise> promise;
+	private String ownerActorName;
+	private PrivateState ownerActorState;
+	
 	/**
      * start handling the action - note that this method is protected, a thread
      * cannot call it directly.
      */
     protected abstract void start();
     
-
     /**
     *
     * start/continue handling the action
@@ -34,9 +42,17 @@ public abstract class Action<R> {
     * public/private/protected
     *
     */
-   /*package*/ final void handle() {
+   /*package*/ final void handle(ActorThreadPool pool, String actorId, PrivateState actorState) {
+	   if(myCallback == null){
+		   actorThreadPool = pool;
+		   ownerActorName = actorId;
+		   ownerActorState = actorState;
+		   start();
+	   }
+	   else {
+		   myCallback.call();
+	   }
    }
-    
     
     /**
      * add a callback to be executed once *all* the given actions results are
@@ -49,9 +65,15 @@ public abstract class Action<R> {
      * @param callback the callback to execute once all the results are resolved
      */
     protected final void then(Collection<? extends Action<?>> actions, callback callback) {
-       	//TODO: replace method body with real implementation
-        throw new UnsupportedOperationException("Not Implemented Yet.");
-   
+       	AtomicInteger numOfActions = new AtomicInteger(actions.size());
+       	myCallback = callback;
+       	for (Action<?> action : actions) {
+			action.getResult().subscribe(()->{
+				if(numOfActions.decrementAndGet() == 0){
+					actorThreadPool.qsOfActors.get(ownerActorName).add(this);
+				}
+			});
+		}  	       	
     }
 
     /**
@@ -61,21 +83,18 @@ public abstract class Action<R> {
      * @param result - the action calculated result
      */
     protected final void complete(R result) {
-       	//TODO: replace method body with real implementation
-        throw new UnsupportedOperationException("Not Implemented Yet.");
-   
+       	myPromise.resolve(result);
     }
     
     /**
      * @return action's promise (result)
      */
     public final Promise<R> getResult() {
-    	//TODO: replace method body with real implementation
-        throw new UnsupportedOperationException("Not Implemented Yet.");
+    	return myPromise;
     }
     
     /**
-     * send an action to an other actor
+     * Send an action to another actor
      * 
      * @param action
      * 				the action
@@ -87,8 +106,22 @@ public abstract class Action<R> {
      * @return promise that will hold the result of the sent action
      */
 	public Promise<?> sendMessage(Action<?> action, String actorId, PrivateState actorState){
-        //TODO: replace method body with real implementation
-        throw new UnsupportedOperationException("Not Implemented Yet.");
+        actorThreadPool.submit(action, actorId, actorState);
+        return getResult();
 	}
-
+	
+	/**
+	 * set action's name
+	 * @param actionName
+	 */
+	public void setActionName(String actionName){
+		this.actionName.getAndSet(actionName);
+	}
+	
+	/**
+	 * @return action's name
+	 */
+	public String getActionName(){
+        return actionName.get();
+	}
 }
