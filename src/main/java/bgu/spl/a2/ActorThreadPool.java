@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * methods
  */
 public class ActorThreadPool {
+	
 	int numOfThreads;
 	boolean isShutDown = false;
 
@@ -65,6 +66,24 @@ public class ActorThreadPool {
 		}
 	}
 
+
+	/**
+	 * getter for actors
+	 * @return actors
+	 */
+	public Map<String, PrivateState> getActors(){
+		return privateStatesOfActors;
+	}
+	
+	/**
+	 * getter for actor's private state
+	 * @param actorId actor's id
+	 * @return actor's private state
+	 */
+	public PrivateState getPrivateState(String actorId){
+		return privateStatesOfActors.get(actorId);
+	}
+	
 	/**
 	 * submits an action into an actor to be executed by a thread belongs to
 	 * this thread pool
@@ -86,7 +105,7 @@ public class ActorThreadPool {
 			vMonitor.inc();
 		}
 	}
-
+		
 	/**
 	 * closes the thread pool - this method interrupts all the threads and waits
 	 * for them to stop - it is returns *only* when there are no live threads in
