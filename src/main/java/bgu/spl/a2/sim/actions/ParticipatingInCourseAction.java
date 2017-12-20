@@ -6,35 +6,29 @@ import bgu.spl.a2.sim.privateStates.StudentPrivateState;
 
 public class ParticipatingInCourseAction<R> extends Action<R> {
 
-	private String courseToRegister;
-	private CoursePrivateState toRegisterState;
+	private String studentName;
+	private StudentPrivateState studentState;
 	private int grade;
 
-	public ParticipatingInCourseAction(String courseToRegister, int grade) {
-		this.courseToRegister = courseToRegister;
+	public ParticipatingInCourseAction(String name, int grade) {
+		this.studentName = name;
 		this.grade = grade;
-		toRegisterState = ((CoursePrivateState) actorThreadPool.getPrivateState(courseToRegister));
+		studentState = ((StudentPrivateState) actorThreadPool.getPrivateState(studentName));
 
 	}
 
 	@Override
 	protected void start() {
-		int availableSpots = ((CoursePrivateState) actorThreadPool.getPrivateState(courseToRegister))
-				.getAvailableSpots();
-		int regStudents = toRegisterState.getRegistered();
-
+		int availableSpots = ((CoursePrivateState) ownerActorState).getAvailableSpots();
+		
 		if (availableSpots > 0) {
-			// decrease the number of registered students
-			toRegisterState.setAvailableSpots(availableSpots - 1);
-
-			// increase the number of registered students
-			toRegisterState.setRegisterd(regStudents + 1);
-
+			((CoursePrivateState) ownerActorState).registerAndUpdateAvailables(); // Registered++, Available--
+			
 			// add the student to course
-			toRegisterState.getRegStudents().add(this.ownerActorName);
+			((CoursePrivateState) ownerActorState).getRegStudents().add(this.ownerActorName);
 
 			// add the course to grades list
-			((StudentPrivateState) ownerActorState).getGrades().put(courseToRegister, grade);
+			studentState.getGrades().put(ownerActorName, grade);
 		}
 	}
 
