@@ -8,7 +8,7 @@ public class AddStudentAction<R> extends Action<R> {
 
 	private Action<Integer> emptyAction;
 	private String newStudentId;
-	private StudentPrivateState newStudentPrivateState;
+	private StudentPrivateState newStudentPrivateState = new StudentPrivateState();
 
 	public AddStudentAction(String newStudentId) {
 		this.newStudentId = newStudentId;
@@ -17,7 +17,7 @@ public class AddStudentAction<R> extends Action<R> {
 
 	@Override
 	protected void start() {
-		actorThreadPool.submit(emptyAction, newStudentId, newStudentPrivateState);
+		this.actorThreadPool.submit(emptyAction, newStudentId, newStudentPrivateState);
 		((DepartmentPrivateState) ownerActorState).getStudentList().add(newStudentId);
 	}
 }
