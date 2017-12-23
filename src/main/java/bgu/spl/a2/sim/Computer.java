@@ -8,21 +8,24 @@ public class Computer {
 	String computerType;
 	long failSig;
 	long successSig;
-	
+	/////////////
+	public SuspendingMutex mutex;
+
 	public Computer(String computerType) {
 		this.computerType = computerType;
 	}
-	
+
 	/**
 	 * this method checks if the courses' grades fulfill the conditions
+	 * 
 	 * @param courses
-	 * 							courses that should be pass
+	 *            courses that should be pass
 	 * @param coursesGrades
-	 * 							courses' grade
+	 *            courses' grade
 	 * @return a signature if couersesGrades grades meet the conditions
 	 */
-	public long checkAndSign(List<String> courses, Map<String, Integer> coursesGrades){
-		//TODO: replace method body with real implementation
+	public long checkAndSign(List<String> courses, Map<String, Integer> coursesGrades) {
+		// TODO: replace method body with real implementation
 		throw new UnsupportedOperationException("Not Implemented Yet.");
 	}
 }

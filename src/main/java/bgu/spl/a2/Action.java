@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @param <R> the action result type
  */
 public abstract class Action<R> {
-	private ActorThreadPool actorThreadPool;
+	protected ActorThreadPool actorThreadPool;
 	private Promise<R> myPromise = new Promise<R>();
 	private callback myCallback;
 	private AtomicReference<String> actionName;
