@@ -84,7 +84,7 @@ public class Promise<T> {
 	 * @param callback
 	 *            the callback to be called when the promise object is resolved
 	 */
-	public void subscribe(callback callback) {
+	public synchronized void subscribe(callback callback) {
 		if (!isResolved()) {
 			this.callbackList.add(callback);
 		} else {

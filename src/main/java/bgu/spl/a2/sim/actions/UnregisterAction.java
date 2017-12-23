@@ -6,33 +6,31 @@ import bgu.spl.a2.Action;
 import bgu.spl.a2.sim.privateStates.CoursePrivateState;
 import bgu.spl.a2.sim.privateStates.StudentPrivateState;
 
-public class UnregisterAction<R> extends Action<R> {
-	private String courseToUnRegister;
-	private CoursePrivateState toUnRegisterState;
-	private HashMap<String, Integer> gradesList = ((StudentPrivateState) this.ownerActorState).getGrades();
+public class UnregisterAction<R> extends Action<Boolean> {
+	private String studentToUnregister;
+	private StudentPrivateState toUnRegisterState;
+	private HashMap<String, Integer> gradesList;
 
-	public UnregisterAction(String courseToUnRegister) {
-		this.courseToUnRegister = courseToUnRegister;
-		toUnRegisterState = (CoursePrivateState) actorThreadPool.getPrivateState(courseToUnRegister);
+	public UnregisterAction(String studentToUnregister) {
+		this.studentToUnregister = studentToUnregister;
+		toUnRegisterState = (StudentPrivateState) actorThreadPool.getPrivateState(studentToUnregister);
+		gradesList = toUnRegisterState.getGrades();
 
 	}
 
 	@Override
 	protected void start() {
 
-		if (gradesList.containsKey(courseToUnRegister)) {
-			int availableSpots = ((CoursePrivateState) actorThreadPool.getPrivateState(courseToUnRegister))
-					.getAvailableSpots();
-			int regStudents = toUnRegisterState.getRegistered();
+		if (((CoursePrivateState) ownerActorState).getRegStudents().contains(studentToUnregister)) {
+			((CoursePrivateState) ownerActorState).unRegisterAndUpdateAvailables();
 
-			// decrease the number of registered students
-			toUnRegisterState.setAvailableSpots(availableSpots - 1);
-
-			// increase the number of registered students
-			toUnRegisterState.setRegisterd(regStudents + 1);
+			
 
 			// remove course from grades list
-			gradesList.remove(courseToUnRegister);
+			gradesList.remove(ownerActorName); // Deleting the name of the course from the STUDENTS grades list
+			((CoursePrivateState) ownerActorState).getRegStudents().remove(studentToUnregister);
+			Boolean complete = new Boolean(true);
+			complete(complete);
 		}
 
 	}
