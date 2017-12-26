@@ -1,6 +1,7 @@
 package bgu.spl.a2;
 
 import java.util.LinkedList;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * this class represents a deferred result i.e., an object that eventually will
@@ -19,7 +20,7 @@ import java.util.LinkedList;
  */
 public class Promise<T> {
 
-	private T resolved = null;
+	private AtomicReference <T> resolved = new AtomicReference<T>(null);
 	private boolean isResolved = false;
 	private LinkedList<callback> callbackList = new LinkedList<callback>();
 
@@ -32,7 +33,7 @@ public class Promise<T> {
 	 *             not yet resolved
 	 */
 	public T get() {
-		return resolved;
+		return resolved.get();
 	}
 
 	/**
@@ -44,7 +45,7 @@ public class Promise<T> {
 	public boolean isResolved() {
 		return isResolved;
 	}
-
+	
 	/**
 	 * resolve this promise object - from now on, any call to the method
 	 * {@link #get()} should return the given value
@@ -60,10 +61,11 @@ public class Promise<T> {
 	 */
 
 	public void resolve(T value) {
-		if (isResolved)
+		if (!resolved.compareAndSet(null, value))
 			throw new IllegalStateException("Promise has already been resolved");
-		resolved = value;
-		isResolved = true;
+		
+		isResolved = true;	
+		
 		for (callback callback : callbackList) {
 			callback.call();
 			callback = null;

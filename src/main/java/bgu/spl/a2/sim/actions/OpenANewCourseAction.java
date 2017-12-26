@@ -1,28 +1,36 @@
 package bgu.spl.a2.sim.actions;
 
-
+import java.util.ArrayList;
 import java.util.List;
 
 import bgu.spl.a2.Action;
 import bgu.spl.a2.sim.privateStates.CoursePrivateState;
 import bgu.spl.a2.sim.privateStates.DepartmentPrivateState;
 
-public class OpenANewCourseAction<R> extends Action<R> {
-	private Action<Integer> emptyAction;
+public class OpenANewCourseAction extends Action<Boolean> {
+	private EmptyAction emptyAction = new EmptyAction();
+	private ArrayList<Action<Boolean>> emptyActions = new ArrayList<>();
 	private String newCourseId;
-	private CoursePrivateState newCoursePrivateState;
-	
+	private CoursePrivateState newCoursePrivateState = new CoursePrivateState();
+
 	public OpenANewCourseAction(String newCourseId, List<String> preRequisites, int availableSpaces) {
 		this.newCourseId = newCourseId;
 		newCoursePrivateState.setAvailableSpots(availableSpaces);
 		newCoursePrivateState.setPrerequisites(preRequisites);
-		setActionName("OpenNewCourse");
-	}
-	
-	@Override
-	protected void start() {
-		actorThreadPool.submit(emptyAction, newCourseId, newCoursePrivateState);
-		((DepartmentPrivateState) ownerActorState).getCourseList().add(newCourseId);
+		setActionName("Open Course");
 	}
 
+	@Override
+	protected void start() {
+		emptyActions.add(emptyAction);
+		sendMessage(emptyAction, newCourseId, newCoursePrivateState);
+		if (!((DepartmentPrivateState) ownerActorState).getCourseList().contains(newCourseId)) {
+			((DepartmentPrivateState) ownerActorState).getCourseList().add(newCourseId);
+		}
+		// then(emptyActions, ()->{
+		// }
+		// });
+
+		complete(true);
+	}
 }

@@ -1,23 +1,31 @@
 package bgu.spl.a2.sim.actions;
 
+import java.util.ArrayList;
+
 import bgu.spl.a2.Action;
 import bgu.spl.a2.sim.privateStates.DepartmentPrivateState;
 import bgu.spl.a2.sim.privateStates.StudentPrivateState;
 
-public class AddStudentAction<R> extends Action<R> {
+public class AddStudentAction extends Action<Boolean> {
 
-	private Action<Integer> emptyAction;
+	private EmptyAction emptyAction = new EmptyAction();
+	private ArrayList<Action<Boolean>> emptyActions = new ArrayList<>();
+	
 	private String newStudentId;
 	private StudentPrivateState newStudentPrivateState = new StudentPrivateState();
 
 	public AddStudentAction(String newStudentId) {
 		this.newStudentId = newStudentId;
-		setActionName("AddStudentAction");
+		setActionName("Add Student");
 	}
 
 	@Override
 	protected void start() {
-		this.actorThreadPool.submit(emptyAction, newStudentId, newStudentPrivateState);
-		((DepartmentPrivateState) ownerActorState).getStudentList().add(newStudentId);
+		sendMessage(emptyAction, newStudentId, newStudentPrivateState);
+		emptyActions.add(emptyAction);
+		if(!((DepartmentPrivateState) ownerActorState).getStudentList().contains(newStudentId)){
+			((DepartmentPrivateState) ownerActorState).getStudentList().add(newStudentId);
+		}
+		complete(true);
 	}
 }

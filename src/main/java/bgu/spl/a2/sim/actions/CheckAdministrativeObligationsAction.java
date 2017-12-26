@@ -1,14 +1,18 @@
 package bgu.spl.a2.sim.actions;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import bgu.spl.a2.Action;
 import bgu.spl.a2.Promise;
 import bgu.spl.a2.sim.Computer;
+import bgu.spl.a2.sim.Simulator;
+import bgu.spl.a2.sim.SuspendingMutex;
+import bgu.spl.a2.sim.privateStates.DepartmentPrivateState;
 import bgu.spl.a2.sim.privateStates.StudentPrivateState;
 
-public class CheckAdministrativeObligationsAction<R> extends Action<R> {
+public class CheckAdministrativeObligationsAction extends Action<Boolean> {
 
 	/*
 	 * Behavior: The department's secretary have to allocate one of the
@@ -19,13 +23,14 @@ public class CheckAdministrativeObligationsAction<R> extends Action<R> {
 	 * Actor: Must be initially submitted to the department's actor.
 	 */
 
-	private List<String> administrativeObligations;
-	private Computer computer;
-	private List<String> students;
+	private String[] administrativeObligations;
+	private String[] students;
+	private String computerType;
+	private List<Action<?>> actions = new ArrayList<>();
 
-	public CheckAdministrativeObligationsAction(Computer computer, List<String> administrativeObligations,
-			List<String> students) {
-		this.computer = computer;
+	public CheckAdministrativeObligationsAction(String computerType, String[] administrativeObligations,
+			String[] students) {
+		this.computerType = computerType;
 		this.administrativeObligations = administrativeObligations;
 		this.students = students;
 
@@ -33,15 +38,21 @@ public class CheckAdministrativeObligationsAction<R> extends Action<R> {
 
 	@Override
 	protected void start() {
-		Promise<Computer> computerPromise = computer.mutex.down();
+		SuspendingMutex computerMutex = Simulator.myWarehouse.getComputer(computerType);
+		Promise<Computer> computerPromise = computerMutex.down();
 		computerPromise.subscribe(() -> {
 			for (String student : students) {
-				Map<String, Integer> coursesGrades = ((StudentPrivateState) actorThreadPool.getPrivateState(student))
-						.getGrades();
-				computer.checkAndSign(administrativeObligations, coursesGrades);
+				if (((DepartmentPrivateState) ownerActorState).getStudentList().contains(student)) {
+					CheckAndSignAction tempCheckAndSignAction = new CheckAndSignAction(computerMutex.getComputer(),
+							administrativeObligations);
+					sendMessage(tempCheckAndSignAction, student, new StudentPrivateState());
+					actions.add(tempCheckAndSignAction);
+				}
 			}
-			computer.mutex.up();
+			then(actions, () -> {
+				complete(true);
+				computerMutex.up();
+			});
 		});
-
 	}
 }

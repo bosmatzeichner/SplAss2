@@ -1,7 +1,8 @@
 package bgu.spl.a2;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -19,10 +20,10 @@ public class ActorThreadPool {
 	int numOfThreads;
 	boolean isShutDown = false;
 
-	public LinkedHashMap<String, ConcurrentLinkedQueue<Action<?>>> qsOfActors;
-	public LinkedHashMap<String, PrivateState> privateStatesOfActors;
-	public Thread[] threads;
-	public VersionMonitor vMonitor;
+	ConcurrentHashMap<String, ConcurrentLinkedQueue<Action<?>>> qsOfActors;
+	ConcurrentHashMap<String, PrivateState> privateStatesOfActors;
+	Thread[] threads;
+	VersionMonitor vMonitor = new VersionMonitor();
 
 	/**
 	 * creates a {@link ActorThreadPool} which has nthreads. Note, threads
@@ -36,31 +37,45 @@ public class ActorThreadPool {
 	 *            the number of threads that should be started by this thread
 	 *            pool
 	 */
+
 	public ActorThreadPool(int nthreads) {
 		numOfThreads = nthreads;
 
-		qsOfActors = new LinkedHashMap<>();
-		privateStatesOfActors = new LinkedHashMap<>();
+		qsOfActors = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Action<?>>>();
+		privateStatesOfActors = new ConcurrentHashMap<>();
 
 		threads = new Thread[numOfThreads];
 
-		for (int i = 0; i < numOfThreads; i++) {
+		for (int i = 0; i < threads.length; i++) {
 			threads[i] = new Thread(() -> {
 				while (!isShutDown) {
-					for (Map.Entry<String, ConcurrentLinkedQueue<Action<?>>> j : qsOfActors.entrySet()) {
+					int version = vMonitor.getVersion();
+					for (Entry<String, ConcurrentLinkedQueue<Action<?>>> j : qsOfActors.entrySet()) {
 						ConcurrentLinkedQueue<Action<?>> queueOfAnActor = (ConcurrentLinkedQueue<Action<?>>) j
 								.getValue();
 						if (!queueOfAnActor.isEmpty()) {
 							Action<?> action = queueOfAnActor.poll();
 							vMonitor.inc();
 							PrivateState tempPriState = privateStatesOfActors.get(j.getKey());
-							action.handle(this, j.getKey(), tempPriState);
-							tempPriState.addRecord(action.getActionName());
+
+							/*
+							 * System.out.println(j.getKey().toString());
+							 * System.out.println(tempPriState.toString());
+							 * System.out.println(action.toString());
+							 */
+							if (action != null) {
+								System.out.println(action.getActionName());
+								action.handle(this, j.getKey(), tempPriState);
+								
+								tempPriState.addRecord(action.getActionName());
+							}
+
 						}
 					}
 					try {
-						vMonitor.await(vMonitor.getVersion());
-					} catch (InterruptedException e) {
+						vMonitor.await(version);
+					} catch (InterruptedException e) {	
+						Thread.currentThread().interrupt();
 					}
 				}
 			});

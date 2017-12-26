@@ -6,7 +6,7 @@ import bgu.spl.a2.Action;
 import bgu.spl.a2.sim.privateStates.CoursePrivateState;
 import bgu.spl.a2.sim.privateStates.StudentPrivateState;
 
-public class UnregisterAction<R> extends Action<Boolean> {
+public class UnregisterAction extends Action<Boolean> {
 	private String studentToUnregister;
 	private StudentPrivateState toUnRegisterState;
 	private HashMap<String, Integer> gradesList;
@@ -29,8 +29,8 @@ public class UnregisterAction<R> extends Action<Boolean> {
 			// remove course from grades list
 			gradesList.remove(ownerActorName); // Deleting the name of the course from the STUDENTS grades list
 			((CoursePrivateState) ownerActorState).getRegStudents().remove(studentToUnregister);
-			Boolean complete = new Boolean(true);
-			complete(complete);
+			
+			complete(true);
 		}
 
 	}

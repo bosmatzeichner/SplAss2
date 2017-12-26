@@ -8,21 +8,21 @@ import bgu.spl.a2.PrivateState;
 /**
  * this class describe course's private state
  */
-public class CoursePrivateState extends PrivateState {
+public class CoursePrivateState extends PrivateState{
 
 	private Integer availableSpots;
 	private Integer registered;
 	private List<String> regStudents;
 	private List<String> prequisites;
-
+	
 	/**
-	 * Implementors note: you may not add other constructors to this class nor
+ 	 * Implementors note: you may not add other constructors to this class nor
 	 * you allowed to add any other parameter to this constructor - changing
 	 * this may cause automatic tests to fail..
 	 */
 	public CoursePrivateState() {
-		regStudents = new ArrayList<>();
-		prequisites = new ArrayList<>();
+		regStudents = new ArrayList<String>();
+		prequisites = new ArrayList<String>();
 	}
 
 	public Integer getAvailableSpots() {
@@ -41,29 +41,27 @@ public class CoursePrivateState extends PrivateState {
 		return prequisites;
 	}
 
-	public void unRegisterAndUpdateAvailables() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void addMoreAvailableSpaces(int howMuchMoreAvailablePlaces) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	public void registerAndUpdateAvailables() {
-		// TODO Auto-generated method stub
+	public void setPrerequisites(List<String> preRequisites) {
+		prequisites = preRequisites;
 		
 	}
 
 	public void setAvailableSpots(int availableSpaces) {
-		// TODO Auto-generated method stub
-		
+		availableSpots = availableSpaces;
+	}
+	
+	public void registerAndUpdateAvailables(){
+		registered++;
+		availableSpots--;
+	}
+	
+	public void unRegisterAndUpdateAvailables(){
+		registered--;
+		availableSpots++;
 	}
 
-	public void setPrerequisites(List<String> preRequisites) {
-		// TODO Auto-generated method stub
+	public void addMoreAvailableSpaces(int howMuchMoreAvailablePlaces) {
+		setAvailableSpots(availableSpots+howMuchMoreAvailablePlaces);
 		
 	}
-
-	}
+}
