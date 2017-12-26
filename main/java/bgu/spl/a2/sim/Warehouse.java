@@ -22,15 +22,16 @@ public class Warehouse {
 		Computer computer = new Computer(computerType);
 		computer.successSig = successSignature;
 		computer.failSig = failSignature;
-		//System.out.println("HERE: " + computer.computerType + " " + computer.successSig + " " + computer.failSig);
+		
 		SuspendingMutex susMut = new SuspendingMutex(computer);
-		//System.out.println("HERE: " + susMut.toString());
+		
 		computersWithTheirMutexes.put(computer.computerType, susMut);
 	}
 	
-	public Computer getComputer(String computerType){
-		return computersWithTheirMutexes.get(computerType).computer;
+	public SuspendingMutex getComputer(String computerType){
+		return computersWithTheirMutexes.get(computerType);
 	}
+	
 	
 	
 }

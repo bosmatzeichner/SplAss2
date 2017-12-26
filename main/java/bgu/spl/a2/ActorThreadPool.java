@@ -1,7 +1,8 @@
 package bgu.spl.a2;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -15,15 +16,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * methods
  */
 public class ActorThreadPool {
-	
+
 	int numOfThreads;
 	boolean isShutDown = false;
 
-	LinkedHashMap<String, ConcurrentLinkedQueue<Action>> qsOfActors;
-	LinkedHashMap<String, PrivateState> privateStatesOfActors;
+	ConcurrentHashMap<String, ConcurrentLinkedQueue<Action<?>>> qsOfActors;
+	ConcurrentHashMap<String, PrivateState> privateStatesOfActors;
 	Thread[] threads;
-	VersionMonitor vMonitor;
-
+	VersionMonitor vMonitor = new VersionMonitor();
 
 	/**
 	 * creates a {@link ActorThreadPool} which has nthreads. Note, threads
@@ -37,55 +37,62 @@ public class ActorThreadPool {
 	 *            the number of threads that should be started by this thread
 	 *            pool
 	 */
-	
 
 	public ActorThreadPool(int nthreads) {
 		numOfThreads = nthreads;
 
-		qsOfActors = new LinkedHashMap<>();
-		privateStatesOfActors = new LinkedHashMap<>();
+		qsOfActors = new ConcurrentHashMap<String, ConcurrentLinkedQueue<Action<?>>>();
+		privateStatesOfActors = new ConcurrentHashMap<>();
 
 		threads = new Thread[numOfThreads];
 
-		for (int i = 0; i < threads.length; i++){
+		for (int i = 0; i < threads.length; i++) {
 			threads[i] = new Thread(() -> {
-				while(!isShutDown){
-					for(Map.Entry<String, ConcurrentLinkedQueue<Action>> j : qsOfActors.entrySet()){
-						ConcurrentLinkedQueue<Action> queueOfAnActor = (ConcurrentLinkedQueue<Action>) j.getValue();
-						if(!queueOfAnActor.isEmpty()){
-							Action action = queueOfAnActor.poll();
+				while (!isShutDown) {
+					int version = vMonitor.getVersion();
+					for (Entry<String, ConcurrentLinkedQueue<Action<?>>> j : qsOfActors.entrySet()) {
+						ConcurrentLinkedQueue<Action<?>> queueOfAnActor = (ConcurrentLinkedQueue<Action<?>>) j
+								.getValue();
+						if (!queueOfAnActor.isEmpty()) {
+							Action<?> action = queueOfAnActor.poll();
 							vMonitor.inc();
 							PrivateState tempPriState = privateStatesOfActors.get(j.getKey());
-							action.handle(this, j.getKey(), tempPriState);
-							tempPriState.addRecord(action.getActionName());
+							if (action != null) {
+								action.handle(this, j.getKey(), tempPriState);
+								tempPriState.addRecord(action.getActionName());
+							}
 						}
 					}
 					try {
-						vMonitor.await(vMonitor.getVersion());
-					} catch (InterruptedException e) {}
+						vMonitor.await(version);
+					} catch (InterruptedException e) {	
+						Thread.currentThread().interrupt();
+					}
 				}
 			});
 		}
 	}
 
-
 	/**
 	 * getter for actors
+	 * 
 	 * @return actors
 	 */
-	public Map<String, PrivateState> getActors(){
+	public Map<String, PrivateState> getActors() {
 		return privateStatesOfActors;
 	}
-	
+
 	/**
 	 * getter for actor's private state
-	 * @param actorId actor's id
+	 * 
+	 * @param actorId
+	 *            actor's id
 	 * @return actor's private state
 	 */
-	public PrivateState getPrivateState(String actorId){
+	public PrivateState getPrivateState(String actorId) {
 		return privateStatesOfActors.get(actorId);
 	}
-	
+
 	/**
 	 * submits an action into an actor to be executed by a thread belongs to
 	 * this thread pool
@@ -98,8 +105,8 @@ public class ActorThreadPool {
 	 *            actor's private state (actor's information)
 	 */
 	public void submit(Action<?> action, String actorId, PrivateState actorState) {
-		if (!isShutDown){
-			if(!qsOfActors.containsKey(actorId)){
+		if (!isShutDown) {
+			if (!qsOfActors.containsKey(actorId)) {
 				qsOfActors.put(actorId, new ConcurrentLinkedQueue<>());
 				privateStatesOfActors.put(actorId, actorState);
 			}
@@ -107,7 +114,7 @@ public class ActorThreadPool {
 			vMonitor.inc();
 		}
 	}
-		
+
 	/**
 	 * closes the thread pool - this method interrupts all the threads and waits
 	 * for them to stop - it is returns *only* when there are no live threads in
@@ -120,7 +127,7 @@ public class ActorThreadPool {
 	 */
 	public void shutdown() throws InterruptedException {
 		isShutDown = true;
-		for(Thread i : threads){
+		for (Thread i : threads) {
 			i.interrupt();
 		}
 	}
@@ -129,7 +136,7 @@ public class ActorThreadPool {
 	 * start the threads belongs to this thread pool
 	 */
 	public void start() {
-		for(Thread i : threads){
+		for (Thread i : threads) {
 			i.start();
 		}
 	}

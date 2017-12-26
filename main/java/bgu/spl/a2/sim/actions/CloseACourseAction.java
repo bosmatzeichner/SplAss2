@@ -1,34 +1,45 @@
 package bgu.spl.a2.sim.actions;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import bgu.spl.a2.Action;
 import bgu.spl.a2.sim.privateStates.CoursePrivateState;
 import bgu.spl.a2.sim.privateStates.DepartmentPrivateState;
+import bgu.spl.a2.sim.privateStates.StudentPrivateState;
 
-public class CloseACourseAction<R> extends Action<R> {
+public class CloseACourseAction extends Action<Boolean> {
 	String courseToClose;
 	List<String> studentsToUnRegister;
-	private List<Action<?>> actions;
+	private List<Action<?>> actions = new ArrayList<>();
+	private List<Action<?>> unregisterActions = new ArrayList<>();
 
 	public CloseACourseAction(String courseToClose) {
 		this.courseToClose = courseToClose;
 		studentsToUnRegister = ((CoursePrivateState) this.ownerActorState).getRegStudents();
-		for (String studentToUnRegister : studentsToUnRegister) {
-			Action<Boolean> unRegister = new UnregisterAction<Boolean>(studentToUnRegister);
-			actorThreadPool.submit(unRegister, courseToClose, actorThreadPool.getPrivateState(courseToClose));
-			actions.add(unRegister);
-		}
-
 	}
 
 	@Override
 	protected void start() {
-		((CoursePrivateState)actorThreadPool.getPrivateState(courseToClose)).setAvailableSpots(-1);
+		CloseACourseCloseMeAction tempAction = new CloseACourseCloseMeAction();
+		sendMessage(tempAction, courseToClose, new CoursePrivateState());
+		actions.add(tempAction);
 		then(actions, ()->{
-			((DepartmentPrivateState) ownerActorState).getCourseList().remove(courseToClose);
-			
+			studentsToUnRegister = ((CoursePrivateState) this.ownerActorState).getRegStudents();
+			for (String studentToUnRegister : studentsToUnRegister) {
+				Action<Boolean> unRegister = new UnregisterAction(studentToUnRegister);
+				sendMessage(unRegister, studentToUnRegister, new StudentPrivateState());
+				unregisterActions.add(unRegister);
+			}
+			then(unregisterActions, () -> {
+				((DepartmentPrivateState) ownerActorState).getCourseList().remove(courseToClose);
+				complete(true);
+			});
 		});
+		
+		
+		
+		
 	}
 
 }

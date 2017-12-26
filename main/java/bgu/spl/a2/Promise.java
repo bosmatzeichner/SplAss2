@@ -1,6 +1,7 @@
 package bgu.spl.a2;
 
 import java.util.LinkedList;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -15,13 +16,12 @@ import java.util.concurrent.atomic.AtomicReference;
  * private, protected or package protected - in other words, no new public
  * methods
  *
- * @param <T>
- *            the result type, <boolean> resolved - initialized ;
+ * @param <T> the result type, <boolean> resolved - initialized ;
  */
 public class Promise<T> {
 
-	private AtomicReference <T> resolved = null;
-	private boolean isResolved = false;
+	private AtomicReference <T> resolved = new AtomicReference<T>(null);
+	private AtomicBoolean isResolved = new AtomicBoolean(false);
 	private LinkedList<callback> callbackList = new LinkedList<callback>();
 
 	/**
@@ -43,7 +43,7 @@ public class Promise<T> {
 	 *         before.
 	 */
 	public boolean isResolved() {
-		return isResolved;
+		return isResolved.get();
 	}
 	
 	/**
@@ -60,11 +60,11 @@ public class Promise<T> {
 	 *            - the value to resolve this promise object with
 	 */
 
-	public void resolve(T value) {
+	public synchronized void resolve(T value) {
 		if (!resolved.compareAndSet(null, value))
 			throw new IllegalStateException("Promise has already been resolved");
 		
-		isResolved = true;	
+		isResolved.compareAndSet(false, true);	
 		
 		for (callback callback : callbackList) {
 			callback.call();

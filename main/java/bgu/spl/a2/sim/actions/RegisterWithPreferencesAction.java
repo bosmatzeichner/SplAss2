@@ -1,40 +1,50 @@
 package bgu.spl.a2.sim.actions;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import bgu.spl.a2.Action;
-import bgu.spl.a2.sim.privateStates.CoursePrivateState;
-import bgu.spl.a2.sim.privateStates.StudentPrivateState;
+import bgu.spl.a2.sim.privateStates.*;
 
 public class RegisterWithPreferencesAction extends Action<Boolean> {
-	public String[] preferedCourses;
-	public String[] grades;
-	
+	public ArrayList<String> preferedCourses;
+	public ArrayList<String> grades;
+	public ParticipatingInCourseAction tempAction;
+
 	public RegisterWithPreferencesAction(String[] preferedCourses, String[] grades) {
+		this.preferedCourses = new ArrayList<String>(Arrays.asList(preferedCourses));
+		this.grades = new ArrayList<String>(Arrays.asList(grades));
+	}
+	
+	public RegisterWithPreferencesAction(ArrayList<String> preferedCourses, ArrayList<String> grades) {
 		this.preferedCourses = preferedCourses;
 		this.grades = grades;
-	}
-	@Override
+}
+@Override
 	protected void start() {
-		CoursePrivateState tempCourse;
-		for(int i = 0; i < preferedCourses.length; i++){
-			tempCourse = (CoursePrivateState) actorThreadPool.getPrivateState(preferedCourses[i]);
-			
-			int availableSpots = tempCourse.getAvailableSpots();
-			
-			if (availableSpots > 0) {
-				tempCourse.registerAndUpdateAvailables(); // Registered++, Available--
-				
-				// add the student to course
-				tempCourse.getRegStudents().add(this.ownerActorName); // this.ownerActorName = Student's name
-
-				// add the course to grades list
-				((StudentPrivateState)ownerActorState).getGrades().put(ownerActorName, Integer.parseInt(grades[i]));
-				
-				complete(true);
-				ownerActorState.addRecord("Register With Preferences");
-				return;
-			}
+	/*
+	 * The logic is:
+	 * We try to register to the first course in the 'Prefered courses list' which has 1->n prefered courses
+	 * If it isn't possible, create a new RegisterWithPreferences action, only now with the rest of the list
+	 */
+		if(preferedCourses.size() > 0){
+			ParticipatingInCourseAction tempAction = new ParticipatingInCourseAction(ownerActorName, Integer.parseInt(grades.get(0)));
+			sendMessage(tempAction, preferedCourses.get(0), new CoursePrivateState());		
+			preferedCourses.remove(0);
+			grades.remove(0);
+			actions.add(tempAction);
+			then(actions, ()->{
+				if(tempAction.getResult().get() == 1){
+					complete(true);
+				}
+				else
+				{
+					RegisterWithPreferencesAction keepOnTryingToRegister = new RegisterWithPreferencesAction(preferedCourses, grades);
+					sendMessage(keepOnTryingToRegister, preferedCourses.get(0), new CoursePrivateState());
+				}
+			});
 		}
-		
+		else complete(true);
 	}
-	
+
 }

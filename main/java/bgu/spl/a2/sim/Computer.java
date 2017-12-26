@@ -25,7 +25,7 @@ public class Computer {
 	 * 							courses' grade
 	 * @return a signature if couersesGrades grades meet the conditions
 	 */
-	public long checkAndSign(List<String> courses, Map<String, Integer> coursesGrades){
+	public long checkAndSign(String[] courses, Map<String, Integer> coursesGrades){
 		for(String i: courses){
 			if(!coursesGrades.containsKey(i) || coursesGrades.get(i) < 56){
 				return failSig;

@@ -23,8 +23,9 @@ public class CoursePrivateState extends PrivateState{
 	public CoursePrivateState() {
 		regStudents = new ArrayList<String>();
 		prequisites = new ArrayList<String>();
+		availableSpots = new Integer(0);
+		registered = new Integer(0);
 	}
-
 	public Integer getAvailableSpots() {
 		return availableSpots;
 	}
@@ -61,7 +62,7 @@ public class CoursePrivateState extends PrivateState{
 	}
 
 	public void addMoreAvailableSpaces(int howMuchMoreAvailablePlaces) {
-		setAvailableSpots(availableSpots+howMuchMoreAvailablePlaces);
+		if(availableSpots != -1) setAvailableSpots(availableSpots+howMuchMoreAvailablePlaces);
 		
 	}
 }

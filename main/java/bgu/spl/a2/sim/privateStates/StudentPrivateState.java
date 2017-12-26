@@ -28,4 +28,8 @@ public class StudentPrivateState extends PrivateState{
 	public long getSignature() {
 		return signature;
 	}
+	
+	public void setSignature(long signature) {
+		this.signature = signature;
+	}
 }
