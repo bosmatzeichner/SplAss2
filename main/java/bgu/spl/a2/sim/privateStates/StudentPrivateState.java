@@ -32,4 +32,12 @@ public class StudentPrivateState extends PrivateState{
 	public void setSignature(long signature) {
 		this.signature = signature;
 	}
+	
+	public void addGrade(String course, int grade){
+		grades.put(course, grade);
+	}
+	
+	public void removeGrade(String course){
+		grades.remove(course);
+	}
 }

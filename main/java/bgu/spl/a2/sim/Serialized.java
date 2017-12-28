@@ -85,7 +85,7 @@ public class Serialized {
 		private Action<?> actualAction;
 		
 		public Action<?> getActualAction() {
-			switch (actionName) {
+			switch (actionName) {			
 			case "Open Course":{
 				this.designatedActor = departmentName;
 				this.designatedActorPrivateState = new DepartmentPrivateState();

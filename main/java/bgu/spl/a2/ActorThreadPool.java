@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * represents an actor thread pool - to understand what this class does please
@@ -17,13 +18,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class ActorThreadPool {
 
-	int numOfThreads;
-	boolean isShutDown = false;
+	private int numOfThreads;
+	private boolean isShutDown = false;
 
-	ConcurrentHashMap<String, ConcurrentLinkedQueue<Action<?>>> qsOfActors;
-	ConcurrentHashMap<String, PrivateState> privateStatesOfActors;
-	Thread[] threads;
-	VersionMonitor vMonitor = new VersionMonitor();
+	private ConcurrentHashMap<String, ConcurrentLinkedQueue<Action<?>>> qsOfActors;
+	private ConcurrentHashMap<String, PrivateState> privateStatesOfActors;
+	private ConcurrentHashMap<String, AtomicBoolean> locksOfActors = new ConcurrentHashMap<String, AtomicBoolean>();
+	private Thread[] threads;
+	private VersionMonitor vMonitor = new VersionMonitor();
 
 	/**
 	 * creates a {@link ActorThreadPool} which has nthreads. Note, threads
@@ -50,22 +52,35 @@ public class ActorThreadPool {
 			threads[i] = new Thread(() -> {
 				while (!isShutDown) {
 					int version = vMonitor.getVersion();
-					for (Entry<String, ConcurrentLinkedQueue<Action<?>>> j : qsOfActors.entrySet()) {
-						ConcurrentLinkedQueue<Action<?>> queueOfAnActor = (ConcurrentLinkedQueue<Action<?>>) j
-								.getValue();
-						if (!queueOfAnActor.isEmpty()) {
-							Action<?> action = queueOfAnActor.poll();
-							vMonitor.inc();
-							PrivateState tempPriState = privateStatesOfActors.get(j.getKey());
-							if (action != null) {
-								action.handle(this, j.getKey(), tempPriState);
-								tempPriState.addRecord(action.getActionName());
+					for (Entry<String, AtomicBoolean> j : locksOfActors.entrySet()) {
+						/* 
+						 * FALSE means the actor is not locked.
+						 * TRUE means the actor is locked
+						 */
+						
+						if (j.getValue().compareAndSet(false, true)) {
+							ConcurrentLinkedQueue<Action<?>> queueOfAnActor = qsOfActors.get(j.getKey());
+							if (!queueOfAnActor.isEmpty()) {
+								Action<?> action = queueOfAnActor.poll();
+								PrivateState tempPriState = privateStatesOfActors.get(j.getKey());
+								if (action != null) {
+									action.handle(this, j.getKey(), tempPriState);
+									j.getValue().set(false);
+									vMonitor.inc();
+								}
+								else{
+									j.getValue().set(false);
+									vMonitor.inc();
+								}
+							} 
+							else{
+								j.getValue().set(false);
 							}
 						}
 					}
 					try {
 						vMonitor.await(version);
-					} catch (InterruptedException e) {	
+					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
 					}
 				}
@@ -109,6 +124,7 @@ public class ActorThreadPool {
 			if (!qsOfActors.containsKey(actorId)) {
 				qsOfActors.put(actorId, new ConcurrentLinkedQueue<>());
 				privateStatesOfActors.put(actorId, actorState);
+				locksOfActors.put(actorId, new AtomicBoolean(false));
 			}
 			qsOfActors.get(actorId).add(action);
 			vMonitor.inc();

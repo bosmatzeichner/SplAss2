@@ -17,10 +17,12 @@ public class CloseACourseAction extends Action<Boolean> {
 	public CloseACourseAction(String courseToClose) {
 		this.courseToClose = courseToClose;
 		studentsToUnRegister = ((CoursePrivateState) this.ownerActorState).getRegStudents();
+		
 	}
 
 	@Override
 	protected void start() {
+		ownerActorState.addRecord(getActionName());
 		CloseACourseCloseMeAction tempAction = new CloseACourseCloseMeAction();
 		sendMessage(tempAction, courseToClose, new CoursePrivateState());
 		actions.add(tempAction);

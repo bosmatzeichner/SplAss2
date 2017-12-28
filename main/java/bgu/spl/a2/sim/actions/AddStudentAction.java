@@ -13,10 +13,12 @@ public class AddStudentAction extends Action<Boolean> {
 
 	public AddStudentAction(String newStudentId) {
 		this.newStudentId = newStudentId;
+		
 	}
 
 	@Override
 	protected void start() {
+		ownerActorState.addRecord(getActionName());
 		sendMessage(emptyAction, newStudentId, newStudentPrivateState);
 		if(!((DepartmentPrivateState) ownerActorState).getStudentList().contains(newStudentId)){
 			((DepartmentPrivateState) ownerActorState).getStudentList().add(newStudentId);

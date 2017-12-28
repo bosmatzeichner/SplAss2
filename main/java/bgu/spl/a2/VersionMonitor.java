@@ -35,8 +35,6 @@ public class VersionMonitor {
 		synchronized(this){
 			while(versionNumber.get() == version){
 				this.wait();
-				//throw new InterruptedException();
-							
 			}
 		}
 	

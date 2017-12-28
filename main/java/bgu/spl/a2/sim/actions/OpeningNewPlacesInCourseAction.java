@@ -8,9 +8,11 @@ public class OpeningNewPlacesInCourseAction extends Action<Boolean> {
 	
 	public OpeningNewPlacesInCourseAction(int howMuchMoreAvailablePlaces) {
 		this.howMuchMoreAvailablePlaces = howMuchMoreAvailablePlaces;
+		
 	}
 	@Override
 	protected void start() {
+		ownerActorState.addRecord(getActionName());
 		((CoursePrivateState) ownerActorState).addMoreAvailableSpaces(howMuchMoreAvailablePlaces);
 		complete(true);
 	}

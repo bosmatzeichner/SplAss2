@@ -35,31 +35,30 @@ public class Simulator {
 	 */
 	public static void start() {
 		// -----------------------------------
-		System.out.println("--------------Phase1------------");
+		//System.out.println("--------------Phase1------------");
 		ActionSerialized[] tempPhase = json.getPhaseA();
 		latchy = new CountDownLatch(tempPhase.length);
 		startPhase(tempPhase, latchy);
 		// -----------------------------------
-		System.out.println("--------------Phase2------------");
+		//System.out.println("--------------Phase2------------");
 		tempPhase = json.getPhaseB();
 		latchy = new CountDownLatch(tempPhase.length);
 		startPhase(tempPhase, latchy);
 		// -----------------------------------
-		System.out.println("--------------Phase3------------");
+		//System.out.println("--------------Phase3------------");
 		tempPhase = json.getPhaseC();
 		latchy = new CountDownLatch(tempPhase.length);
 		startPhase(tempPhase, latchy);
 	}
 
 	private static void startPhase(ActionSerialized[] tempPhase, CountDownLatch latchy) {
-		System.out.println("phase starting -------------");
+		// System.out.println("phase starting -------------");
 		for (int i = 0; i < tempPhase.length; i++) {
 			Action<?> tempAction = tempPhase[i].getActualAction();
 			actorThreadPool.submit(tempAction, tempPhase[i].getDesignatedActor(),
 					tempPhase[i].getDesignatedActorPrivateState());
 			tempAction.getResult().subscribe(() -> {
 				latchy.countDown();
-				System.out.println(latchy.getCount());
 			});
 		}
 
@@ -107,9 +106,9 @@ public class Simulator {
 			json = gson.fromJson(jsonReader, Serialized.class);
 			
 			myWarehouse = new Warehouse(json.getComputerSerialized());
-			ActorThreadPool tempActorThreadPool = new ActorThreadPool(json.getThreads());
+			ActorThreadPool tempActorThreadPool = new ActorThreadPool(json.getThreads()+2000);
 			attachActorThreadPool(tempActorThreadPool);
-
+			
 			actorThreadPool.start();
 			
 			start();
@@ -124,7 +123,6 @@ public class Simulator {
 		} 
 		catch (Exception e) {
 			e.printStackTrace();
-			System.out.println("BUSTED");
 		}
 
 	}

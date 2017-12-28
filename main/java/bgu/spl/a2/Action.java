@@ -50,10 +50,10 @@ public abstract class Action<R> {
 			actorThreadPool = pool;
 			ownerActorName = actorId;
 			ownerActorState = actorState;
-			System.out.println(getActionName());
+			// System.out.println(getActionName());
 			start();
 		} else {
-			System.out.println(getActionName() + " CALLBACK");
+			// System.out.println(getActionName() + " CALLBACK");
 			myCallback.call();
 		}
 	}
@@ -75,7 +75,8 @@ public abstract class Action<R> {
 		for (Action<?> action : actions) {
 			action.getResult().subscribe(() -> {
 				if (numOfActions.decrementAndGet() == 0) {
-					actorThreadPool.qsOfActors.get(ownerActorName).add(this);
+					//actorThreadPool.qsOfActors.get(ownerActorName).add(this);
+					actorThreadPool.submit(this, ownerActorName, ownerActorState);
 				}
 			});
 		}

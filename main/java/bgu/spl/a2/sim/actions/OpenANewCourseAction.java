@@ -1,6 +1,5 @@
 package bgu.spl.a2.sim.actions;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import bgu.spl.a2.Action;
@@ -14,13 +13,14 @@ public class OpenANewCourseAction extends Action<Boolean> {
 
 	public OpenANewCourseAction(String newCourseId, List<String> preRequisites, int availableSpaces) {
 		this.newCourseId = newCourseId;
-		System.out.println("NEW COURSE ID: " + newCourseId);
 		newCoursePrivateState.setAvailableSpots(availableSpaces);
 		newCoursePrivateState.setPrerequisites(preRequisites);
+		
 	}
 
 	@Override
 	protected void start() {
+		ownerActorState.addRecord(getActionName());
 		sendMessage(emptyAction, newCourseId, newCoursePrivateState);
 		if (!((DepartmentPrivateState) ownerActorState).getCourseList().contains(newCourseId)) {
 			((DepartmentPrivateState) ownerActorState).getCourseList().add(newCourseId);

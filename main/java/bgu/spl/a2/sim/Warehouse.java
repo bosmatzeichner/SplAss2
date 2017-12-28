@@ -1,7 +1,6 @@
 package bgu.spl.a2.sim;
 
 import java.util.HashMap;
-
 import bgu.spl.a2.sim.Serialized.ComputerSerialized;
 
 /**
@@ -17,7 +16,7 @@ public class Warehouse {
 			addAComputer(i.getSuccess(), i.getFail(), i.getType());
 		}
 	}
-	
+		
 	public void addAComputer(long successSignature, long failSignature, String computerType){
 		Computer computer = new Computer(computerType);
 		computer.successSig = successSignature;
@@ -31,7 +30,5 @@ public class Warehouse {
 	public SuspendingMutex getComputer(String computerType){
 		return computersWithTheirMutexes.get(computerType);
 	}
-	
-	
-	
+		
 }

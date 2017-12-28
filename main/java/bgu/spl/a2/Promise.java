@@ -32,7 +32,8 @@ public class Promise<T> {
 	 *             in the case where this method is called and this object is
 	 *             not yet resolved
 	 */
-	public T get() {
+	public T get() { // TODO Made the method to throw IllegalStateException
+		if(!isResolved()) throw new IllegalStateException();
 		return resolved.get();
 	}
 

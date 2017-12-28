@@ -14,7 +14,7 @@ public class ParticipatingInCourseEnlistYourselfAction extends Action<Boolean> {
 	}
 	@Override
 	protected void start() {
-		((StudentPrivateState)ownerActorState).getGrades().put(courseName, grade);
+		((StudentPrivateState)ownerActorState).addGrade(courseName, grade);
 		complete(true);
 	}
 

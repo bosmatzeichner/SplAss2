@@ -12,7 +12,7 @@ public class UnregisterRemoveYourselfAction extends Action<Boolean> {
 	}
 	@Override
 	protected void start() {
-		((StudentPrivateState)ownerActorState).getGrades().remove(courseToRemove);
+		((StudentPrivateState)ownerActorState).removeGrade(courseToRemove);
 		complete(true);		
 	}
 	

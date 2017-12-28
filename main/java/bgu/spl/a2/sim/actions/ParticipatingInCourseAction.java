@@ -18,40 +18,43 @@ public class ParticipatingInCourseAction extends Action<Integer> {
 
 	@Override
 	protected void start() {
+		ownerActorState.addRecord(getActionName());
 		availableSpots = ((CoursePrivateState) ownerActorState).getAvailableSpots();
 
-		if (availableSpots > 0) {
+		if (!((CoursePrivateState) ownerActorState).getRegStudents().contains(studentName)) {
+			if (availableSpots > 0) {
 
-			Action<Integer> checkIfCompatible = new ParticipatingInCourseCheckIfCompatibleAction(
-					((CoursePrivateState) ownerActorState).getPrequisites(), availableSpots, ownerActorName);
+				Action<Integer> checkIfCompatible = new ParticipatingInCourseCheckIfCompatibleAction(
+						((CoursePrivateState) ownerActorState).getPrequisites(), availableSpots, ownerActorName);
 
-			this.sendMessage(checkIfCompatible, studentName, new StudentPrivateState());
+				this.sendMessage(checkIfCompatible, studentName, new StudentPrivateState());
 
-			actions.add(checkIfCompatible);
-			then(actions, () -> {
-				availableSpots = ((CoursePrivateState) ownerActorState).getAvailableSpots();
-				if (availableSpots > 0) {
-					if (((Integer) actions.get(0).getResult().get()) == 1) {
-						((CoursePrivateState) ownerActorState).registerAndUpdateAvailables(); 
-						((CoursePrivateState) ownerActorState).getRegStudents().add(this.ownerActorName);
-						ParticipatingInCourseEnlistYourselfAction enlistYourself = new ParticipatingInCourseEnlistYourselfAction(ownerActorName, grade);
+				actions.clear();
+				actions.add(checkIfCompatible);
+				then(actions, () -> {
+					availableSpots = ((CoursePrivateState) ownerActorState).getAvailableSpots();
+					if (availableSpots > 0 && ((Integer) actions.get(0).getResult().get()) == 1) {
+
+						((CoursePrivateState) ownerActorState).registerAndUpdateAvailables();
+						((CoursePrivateState) ownerActorState).getRegStudents().add(studentName);
+						ParticipatingInCourseEnlistYourselfAction enlistYourself = new ParticipatingInCourseEnlistYourselfAction(
+								ownerActorName, grade);
 						sendMessage(enlistYourself, studentName, new StudentPrivateState());
-						
+
 						actions.clear();
 						actions.add(enlistYourself);
-			
-						then(actions, ()->{
+
+						then(actions, () -> {
 							complete(1);
 						});
-					} 
-					else{
+					} else {
 						complete(-1);
 					}
-				}
-				else{
-					complete(-1);
-				}
-			});			
+				});
+			} else
+				complete(-1);
+		} else {
+			sendMessage(this, ownerActorName, ownerActorState);
 		}
 	}
 }

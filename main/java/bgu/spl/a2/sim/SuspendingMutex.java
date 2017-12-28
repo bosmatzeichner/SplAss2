@@ -24,6 +24,11 @@ public class SuspendingMutex {
 	public SuspendingMutex(Computer computer){
 		this.computer = computer;
 	}
+	
+	public Computer getComputer() {
+		return computer;
+	}
+	
 	/**
 	 * Computer acquisition procedure
 	 * Note that this procedure is non-blocking and should return immediately
@@ -31,9 +36,6 @@ public class SuspendingMutex {
 	 * @return a promise for the requested computer
 	 */
 	
-	public Computer getComputer() {
-		return computer;
-	}
 	public Promise<Computer> down(){
 		Promise<Computer> tempPromise = new Promise<Computer>();
 		if(isLocked.compareAndSet(false, true)){

@@ -2,8 +2,6 @@ package bgu.spl.a2.sim.actions;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
 import bgu.spl.a2.Action;
 import bgu.spl.a2.Promise;
 import bgu.spl.a2.sim.Computer;
@@ -33,11 +31,13 @@ public class CheckAdministrativeObligationsAction extends Action<Boolean> {
 		this.computerType = computerType;
 		this.administrativeObligations = administrativeObligations;
 		this.students = students;
+		
 
 	}
 
 	@Override
 	protected void start() {
+		ownerActorState.addRecord(getActionName());
 		SuspendingMutex computerMutex = Simulator.myWarehouse.getComputer(computerType);
 		Promise<Computer> computerPromise = computerMutex.down();
 		computerPromise.subscribe(() -> {
@@ -52,7 +52,7 @@ public class CheckAdministrativeObligationsAction extends Action<Boolean> {
 				}
 			}
 			then(actions, () -> {
-				computerMutex.up();
+				computerMutex.up();			
 				complete(true);
 			});
 		});

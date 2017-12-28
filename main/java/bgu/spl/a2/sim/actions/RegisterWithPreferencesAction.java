@@ -22,6 +22,7 @@ public class RegisterWithPreferencesAction extends Action<Boolean> {
 }
 @Override
 	protected void start() {
+	ownerActorState.addRecord(getActionName());
 	/*
 	 * The logic is:
 	 * We try to register to the first course in the 'Prefered courses list' which has 1->n prefered courses

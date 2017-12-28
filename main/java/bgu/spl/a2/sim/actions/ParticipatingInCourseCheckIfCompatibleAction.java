@@ -27,7 +27,6 @@ public class ParticipatingInCourseCheckIfCompatibleAction extends Action<Integer
 			}
 		}
 		if(shouldEnlist) {
-			((StudentPrivateState)this.ownerActorState).getGrades().put(courseName, grade);
 			complete(1);
 		}
 		else complete(-1);

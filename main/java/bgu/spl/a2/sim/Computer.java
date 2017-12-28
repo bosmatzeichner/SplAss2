@@ -1,6 +1,5 @@
 package bgu.spl.a2.sim;
 
-import java.util.List;
 import java.util.Map;
 
 
@@ -27,7 +26,7 @@ public class Computer {
 	 */
 	public long checkAndSign(String[] courses, Map<String, Integer> coursesGrades){
 		for(String i: courses){
-			if(!coursesGrades.containsKey(i) || coursesGrades.get(i) < 56){
+			if(!coursesGrades.containsKey(i) || coursesGrades.get(i) < 57){ // TODO Changed the passing grade (57)
 				return failSig;
 			}
 		}
